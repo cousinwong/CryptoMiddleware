@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using CryptoMiddleware.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
@@ -7,26 +8,73 @@ using System.Configuration;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.ServiceModel;
+using System.ServiceModel.Description;
+using System.ServiceModel.Web;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
+using System.Xml.Linq;
 
 namespace CryptoMiddleware
 {
-    public class CoinModel
+    [ServiceContract]
+    public interface IService
     {
-        public string Symbol { get; set; }
-        public string Name { get; set; }
-        public long TotalSupply { get; set; }
-        public string ContractAddress { get; set; }
-        public int TotalHolder { get; set; }
-        public decimal Price { get; set; }
+        [OperationContract]
+        [WebInvoke(Method = "GET", ResponseFormat = WebMessageFormat.Json, BodyStyle = WebMessageBodyStyle.Wrapped, UriTemplate = "getCoinList")]
+        [return: MessageParameter(Name = "Data")]
+        List<CoinModel> GetCoinList();
     }
+
+    public class Service : IService
+    {
+        public List<CoinModel> GetCoinList()
+        {
+            try
+            {
+
+                //List<CoinModel> data = new List<CoinModel>
+                //{
+                //    new CoinModel
+                //    {
+                //        Symbol = "BTC",
+                //        Name = "BitCoin",
+                //        ContractAddress = "123 Boulverad",
+                //        Price = (decimal)30000.00
+                //    },
+                //    new CoinModel
+                //    {
+                //        Symbol = "ETH",
+                //        Name = "Ethereum",
+                //        ContractAddress = "Abderer",
+                //        Price = (decimal)23.00
+                //    },
+                //    new CoinModel
+                //    {
+                //        Symbol = "USDT",
+                //        Name = "Usdt",
+                //        ContractAddress = "Texas",
+                //        Price = (decimal)0.00
+                //    }
+                //};
+
+                List<CoinModel> data = Global.CoinDictionary.Values.ToList();
+
+                return data;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+    }
+
+
 
     public class Program
     {
-        static ConcurrentDictionary<string, CoinModel> coinDictionary = new ConcurrentDictionary<string, CoinModel>();
         static HttpClient client = new HttpClient();
         static CancellationTokenSource cts = new CancellationTokenSource();
 
@@ -45,15 +93,15 @@ namespace CryptoMiddleware
             client.DefaultRequestHeaders.Add("Authorization", "848b0cf3cbb3517182cec70675762f51f2f6c9eae9190b9817226aad641ca273");
             Task.Factory.StartNew(x => { StartInterval((CancellationToken)x); }, cts.Token, TaskCreationOptions.LongRunning);
 
-            Console.WriteLine("Ended");
-            Console.ReadLine();
-        }
 
-        static async Task RunAsync()
-        {
-            client.BaseAddress = new Uri(Global.GetTopVolumeAPI);
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            WebServiceHost hostWeb = new WebServiceHost(typeof(Service));
+            ServiceEndpoint ep = hostWeb.AddServiceEndpoint(typeof(IService), new WebHttpBinding(), "");
+            ServiceDebugBehavior stp = hostWeb.Description.Behaviors.Find<ServiceDebugBehavior>();
+            stp.HttpHelpPageEnabled = false;
+            hostWeb.Open();
+
+            Console.WriteLine("API Ready: http://localhost:8080");
+            Console.ReadLine();
         }
 
         private static async void StartInterval(CancellationToken cts)
@@ -75,7 +123,7 @@ namespace CryptoMiddleware
                         {
                             string sym = (string)coinInfo.SelectToken("Name");
 
-                            if (coinDictionary.TryGetValue(sym, out coin))
+                            if (Global.CoinDictionary.TryGetValue(sym, out coin))
                             {
                                 coin.Name = (string)coinInfo.SelectToken("FullName");
                             }
@@ -100,7 +148,7 @@ namespace CryptoMiddleware
 
                         if (isNew)
                         {
-                            coinDictionary.TryAdd(coin.Symbol, coin);
+                            Global.CoinDictionary.TryAdd(coin.Symbol, coin);
                         }
                     }
                 }
@@ -110,7 +158,7 @@ namespace CryptoMiddleware
                     using (CryptoMiddlewareDBDataContext db = new CryptoMiddlewareDBDataContext(Global.ConnectionString))
                     {
                         var itemInDB = db.tokens;
-                        foreach (var item in coinDictionary)
+                        foreach (var item in Global.CoinDictionary)
                         {
                             // Update the coin in DB if the coin is existed.
                             if (itemInDB.Any(x => x.symbol == item.Key))
@@ -142,7 +190,8 @@ namespace CryptoMiddleware
                     scope.Complete();
                 }
 
-                foreach (var item in coinDictionary.Values)
+                // Debug use.
+                foreach (var item in Global.CoinDictionary.Values)
                 {
                     Console.WriteLine($"Symbol: {item.Symbol}\tName: {item.Name}\t\tTS: {item.TotalSupply}\t\tCA: {item.ContractAddress}\tTH: {item.TotalHolder}\tPrice: {item.Price}");
                 }
@@ -225,7 +274,7 @@ namespace CryptoMiddleware
                     {
                         foreach (var item in db.tokens)
                         {
-                            coinDictionary.TryAdd(item.symbol, new CoinModel()
+                            Global.CoinDictionary.TryAdd(item.symbol, new CoinModel()
                             {
                                 Symbol = item.symbol,
                                 Name = item.name,
