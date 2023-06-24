@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 11, 8.5" name="CryptoMiddlewareDB">
+  <DataContextMoniker Name="/CryptoMiddlewareDBDataContext" />
+  <nestedChildShapes>
+    <classShape Id="31bb9676-0012-4c12-ba18-e1b9e4dd76da" absoluteBounds="3.875, 2.125, 2, 2.1554996744791666">
+      <DataClassMoniker Name="/CryptoMiddlewareDBDataContext/token" />
+      <nestedChildShapes>
+        <elementListCompartment Id="09458705-f2e4-475d-a7ff-fc7987ad81b4" absoluteBounds="3.89, 2.585, 1.9700000000000002, 1.5954996744791665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+  </nestedChildShapes>
+</ordesignerObjectsDiagram>

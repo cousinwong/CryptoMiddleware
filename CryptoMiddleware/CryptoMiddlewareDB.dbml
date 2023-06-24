@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?><Database Class="CryptoMiddlewareDBDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+  <Table Name="" Member="tokens">
+    <Type Name="token">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="symbol" Type="System.String" DbType="VarChar(5) NOT NULL" CanBeNull="false" />
+      <Column Name="name" Type="System.String" DbType="VarChar(50) NOT NULL" CanBeNull="false" />
+      <Column Name="total_supply" Type="System.Int64" DbType="BigInt NOT NULL" CanBeNull="false" />
+      <Column Name="contract_address" Type="System.String" DbType="VarChar(66) NOT NULL" CanBeNull="false" />
+      <Column Name="total_holders" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="price" Type="System.Decimal" DbType="Decimal(38,2) NULL" CanBeNull="true" />
+    </Type>
+  </Table>
+</Database>
