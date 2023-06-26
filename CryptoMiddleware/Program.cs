@@ -15,6 +15,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
+using System.Web.Http.Cors;
 using System.Xml.Linq;
 
 namespace CryptoMiddleware
@@ -90,12 +91,14 @@ namespace CryptoMiddleware
             DBCheck();
             Console.WriteLine("Database check completed.");
 
-            client.DefaultRequestHeaders.Add("Authorization", "848b0cf3cbb3517182cec70675762f51f2f6c9eae9190b9817226aad641ca273");
+            client.DefaultRequestHeaders.Add("Authorization", "");
+
+            // Start task to retrieve coin from API (CryptoCompare) at interval.
             Task.Factory.StartNew(x => { StartInterval((CancellationToken)x); }, cts.Token, TaskCreationOptions.LongRunning);
 
-
+            // Host as API.
             WebServiceHost hostWeb = new WebServiceHost(typeof(Service));
-            ServiceEndpoint ep = hostWeb.AddServiceEndpoint(typeof(IService), new WebHttpBinding(), "");
+            ServiceEndpoint ep = hostWeb.AddServiceEndpoint(typeof(IService), new WebHttpBinding() { CrossDomainScriptAccessEnabled = true }, "");
             ServiceDebugBehavior stp = hostWeb.Description.Behaviors.Find<ServiceDebugBehavior>();
             stp.HttpHelpPageEnabled = false;
             hostWeb.Open();
@@ -107,6 +110,8 @@ namespace CryptoMiddleware
         private static async void StartInterval(CancellationToken cts)
         {
             Thread.Sleep(1000);
+
+            // Loop to retrieve the Top Volume API, based on the Interval in App.Config.
             while (!cts.IsCancellationRequested)
             {
                 HttpResponseMessage response = await client.GetAsync(Global.GetTopVolumeAPI);
