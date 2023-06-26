@@ -91,7 +91,8 @@ namespace CryptoMiddleware
             DBCheck();
             Console.WriteLine("Database check completed.");
 
-            client.DefaultRequestHeaders.Add("Authorization", "");
+            // Insert your api key here.
+            client.DefaultRequestHeaders.Add("Authorization", Global.ApiKey);
 
             // Start task to retrieve coin from API (CryptoCompare) at interval.
             Task.Factory.StartNew(x => { StartInterval((CancellationToken)x); }, cts.Token, TaskCreationOptions.LongRunning);
@@ -220,6 +221,7 @@ namespace CryptoMiddleware
             }
 
             Global.GetTopVolumeAPI = ConfigurationManager.AppSettings["GetTopVolumeAPI"].ToString();
+            Global.ApiKey = ConfigurationManager.AppSettings["ApiKey"].ToString();
         }
 
         private static void DBCheck()
